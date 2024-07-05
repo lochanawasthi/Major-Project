@@ -7,10 +7,15 @@ const ejsMate = require("ejs-mate");
 const ExpressError = require("./utils/ExpressError.js");
 const session = require("express-session");
 const flash = require("connect-flash");
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const User = require("./models/user.js")
 
 
-const listings= require("./routes/listing.js");
-const reviews = require("./routes/review.js");
+///for route Listing and Review
+const listingsRouter= require("./routes/listing.js");
+const reviewsRouter = require("./routes/review.js");
+const userRouter = require("./routes/user.js");
 
 
 app.set("view engine", "ejs");
@@ -64,17 +69,41 @@ app.use(session(sessionOptions));
 app.use(flash());///this should be before routes.
 
 
+
+//passport implementation after seassions middleWare
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+
+
+passport.serializeUser(User.serializeUser()); // user info in session
+passport.deserializeUser(User.deserializeUser());// unstore info in session
+
+
 //middle ware fore flash
 app.use((req,res,next)=>{
+
     res.locals.success = req.flash("success");
+    res.locals.error=req.flash("error");
+    res.locals.currUser = req.user;
+    
     console.log(res.locals.success);
+
     next();
 });
 
+// app.get("/demouser",async(req,res)=>{
+// let fakeUser = new User({
+//  email:"student@gmail.com",
+//  username:"delts-student"
+// });
+//    let registeredUSer = await User.register(fakeUser, "helloworld");
+//    res.send(registeredUSer);
+// });
 
-app.use("/listings",listings); ///for Routes to connect 
-app.use("/listings/:id/reviews", reviews); ///for reviews in routers folder
-
+app.use("/listings",listingsRouter); ///for Routes to connect 
+app.use("/listings/:id/reviews", reviewsRouter); ///for reviews in routers folder
+app.use("/",userRouter);
 
 
 app.all("*",(req,res,next)=>{

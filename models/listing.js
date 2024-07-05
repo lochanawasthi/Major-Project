@@ -6,7 +6,6 @@ const listingSchema = new Schema ({
     title:{
         type:String,
         required:true,
-
     },
 
     description:String,
@@ -27,10 +26,14 @@ const listingSchema = new Schema ({
 
         },
     ],
+    owner:{
+        type:Schema.Types.ObjectId,
+        ref:"User",
+    },
 });
 
 listingSchema.post("findOneAndDelete", async(listing)=>{
-    if(lisiting)
+    if(listing)
     await Review.deleteMany({_id : {$in : listing.reviews}});
 });
 
